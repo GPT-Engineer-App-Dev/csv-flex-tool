@@ -1,26 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Upload, Download, Plus, Trash2, Save } from 'lucide-react';
+import { Upload, Download, Plus, Trash2 } from 'lucide-react';
 
 const CSVEditor = () => {
   const [data, setData] = useState([]);
   const [headers, setHeaders] = useState([]);
   const [editingCell, setEditingCell] = useState(null);
+  const fileInputRef = useRef(null);
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target.result;
-      const lines = content.split('\n');
-      const headers = lines[0].split(',');
-      const rows = lines.slice(1).map(line => line.split(','));
-      setHeaders(headers);
-      setData(rows);
-    };
-    reader.readAsText(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target.result;
+        const lines = content.split('\n');
+        const headers = lines[0].split(',');
+        const rows = lines.slice(1).filter(line => line.trim() !== '').map(line => line.split(','));
+        setHeaders(headers);
+        setData(rows);
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current.click();
   };
 
   const handleCellEdit = (rowIndex, colIndex, value) => {
@@ -67,13 +74,11 @@ const CSVEditor = () => {
           accept=".csv"
           onChange={handleFileUpload}
           className="hidden"
-          id="csv-upload"
+          ref={fileInputRef}
         />
-        <label htmlFor="csv-upload">
-          <Button as="span">
-            <Upload className="mr-2 h-4 w-4" /> Upload CSV
-          </Button>
-        </label>
+        <Button onClick={handleUploadClick}>
+          <Upload className="mr-2 h-4 w-4" /> Upload CSV
+        </Button>
       </div>
       {data.length > 0 && (
         <>
